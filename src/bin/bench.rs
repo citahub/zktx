@@ -201,7 +201,7 @@ fn test_pedersen(){
 }
 
 fn test_amount(samples:u32){
-    println!("test_p2c");
+    println!("test_amount");
     use zktx::common_verify::amount::*;
 
     ensure_amount_param().unwrap();
