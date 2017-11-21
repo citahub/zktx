@@ -200,8 +200,37 @@ fn test_pedersen(){
     println!("PH = {:?}",res);
 }
 
+fn test_amount(samples:u32){
+    println!("test_p2c");
+    use zktx::common_verify::amount::*;
+
+    ensure_amount_param().unwrap();
+
+    use std::time::{Duration,Instant};
+    let mut total = Duration::new(0, 0);
+
+    println!("Creating {} proofs and averaging the time spent creating them.", samples);
+
+    for _ in 0..samples{
+        let now = Instant::now();
+        //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
+        let rng = &mut thread_rng();
+        let rcm :[u64;2]= [rng.gen(),rng.gen()];
+        let addr = ([rng.gen(),rng.gen(),rng.gen(),0],[rng.gen(),rng.gen(),rng.gen(),0]);
+        let random:[u64;4] = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
+        let va :[u64;2]= [10,0];
+        let (proof,rp,enc) = amount_info(rcm,va,addr,random).unwrap();
+        total += now.elapsed();
+
+        let res = amount_verify(rp,enc,proof).unwrap();
+        assert!(res);
+    }
+    println!("average proving time: {:?}", total / samples);
+}
+
 fn main(){
     test_pedersen();
+    test_amount(2);
     test_b2c(10);
     test_p2c(10);
     test_c2b(5);
