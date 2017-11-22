@@ -11,6 +11,7 @@ pub const PHOUT: usize = 256;
 pub const PHIN: usize = 512;
 pub const ADSK: usize = 256;
 pub const TREEDEPTH: usize = 60;
+pub const PARAMPATH: &str = "PARAMS";
 pub const C2BPARAMPATH: &str = "PARAMS/c2bparams";
 pub const P2CPARAMPATH: &str = "PARAMS/p2cparams";
 pub const B2CPARAMPATH: &str = "PARAMS/b2cparams";

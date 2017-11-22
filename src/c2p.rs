@@ -294,6 +294,9 @@ pub fn c2p_verify(
 }
 
 pub fn ensure_c2p_param() -> Result<(), Error> {
+    if !Path::new(PARAMPATH).exists() {
+        std::fs::create_dir(Path::new(PARAMPATH)).unwrap();
+    }
     if !Path::new(C2PPARAMPATH).exists() {
         println!("Creating the parameters");
         let rng = &mut thread_rng();

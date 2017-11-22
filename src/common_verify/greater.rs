@@ -107,6 +107,9 @@ pub fn greater_verify(
 }
 
 pub fn ensure_greater_param() -> Result<(), Error> {
+    if !Path::new(PARAMPATH).exists() {
+        std::fs::create_dir(Path::new(PARAMPATH)).unwrap();
+    }
     if !Path::new(GREATERPARAMPATH).exists() {
         println!("Creating the parameters");
         let rng = &mut thread_rng();
