@@ -303,7 +303,8 @@ pub fn c2b_verify(
 
 pub fn ensure_c2b_param() -> Result<(), Error> {
     if !Path::new(PARAMPATH).exists() {
-        std::fs::create_dir(Path::new(PARAMPATH)).unwrap();
+        use std::fs::create_dir;
+        create_dir(Path::new(PARAMPATH)).unwrap();
     }
     if !Path::new(C2BPARAMPATH).exists() {
         println!("Creating the parameters");

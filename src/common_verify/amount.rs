@@ -187,7 +187,8 @@ pub fn amount_verify(
 
 pub fn ensure_amount_param() -> Result<(), Error> {
     if !Path::new(PARAMPATH).exists() {
-        std::fs::create_dir(Path::new(PARAMPATH)).unwrap();
+        use std::fs::create_dir;
+        create_dir(Path::new(PARAMPATH)).unwrap();
     }
     if !Path::new(AMOUNTPARAMPATH).exists() {
         println!("Creating the parameters");
