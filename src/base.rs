@@ -22,7 +22,7 @@ pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
     use std::fs::File;
     use std::io::prelude::*;
     use std::path::Path;
-    
+
     if !Path::new(PARAMPATH).exists() {
         use std::fs::create_dir;
         create_dir(Path::new(PARAMPATH)).unwrap();
