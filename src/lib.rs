@@ -15,6 +15,12 @@ pub mod p2c;
 
 pub mod common_verify;
 
+pub mod pedersen;
+
+pub mod incrementalmerkletree;
+
+pub mod contract;
+
 pub fn pedersen_hash(bits: &[bool]) -> [u64; 4] {
     assert_eq!(bits.len(), base::PHIN);
     jubjub::pedersen_hash_real(bits, &base::ph_generator())
