@@ -7,6 +7,7 @@ pub trait Hashable: Clone + Copy {
     fn blank() -> Self;
 }
 
+#[derive(Debug)]
 pub struct MerklePath<T: Hashable> {
     pub authentication_path: Vec<T>,
     pub index: Vec<bool>,

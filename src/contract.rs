@@ -57,29 +57,33 @@ impl PrivacyContract {
         let balance = self.balances.get_mut(&address).unwrap();
         assert!(p2c_verify(balance.clone(),message.coin,message.delt_ba,message.rp,message.enc,message.proof).unwrap());
         if self.coins.contains(&message.coin) {
+            println!("Dup coin");
             return (false, None);
         }
 
         // compare block number
         if let Some(block_number) = self.last_spent.get_mut(&address) {
             if *block_number >= message.block_number {
+                println!("invalid block number");
                 return (false, None);
             }
         }
         self.last_spent.insert(address, message.block_number);
         self.tree.append(PedersenDigest(message.coin));
         *balance = ecc_sub(balance.clone(), message.delt_ba);
-        println!("sender proof verify ok!");
+        println!("sender proof verify ok! root {:?} coin {:?}", self.tree.root(), message.coin);
         (true, Some(self.tree.path(VecDeque::new())))
     }
 
     pub fn receive_verify(&mut self, address: ([u64;4],[u64;4]), message: ReceiverProof) -> bool {
         if message.root != self.tree.root().0 {
+            println!("invalid root, message.root {:?}, tree.root {:?}", message.root, self.tree.root());
             return false;
         }
         let balance = self.balances.get_mut(&address).unwrap();
         assert!(c2p_verify(message.nullifier,message.root,message.delt_ba,message.proof).unwrap());
         if self.nullifier_set.contains(&message.nullifier) {
+            println!("Dup nullifier");
             return false;
         }
 

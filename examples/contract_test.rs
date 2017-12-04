@@ -151,13 +151,15 @@ fn round_test(){
     if !ok {
         panic!("alice send_verify failed");
     }
+    let path = path.unwrap();
+    println!("path {:?}", path);
     // use log confirm sender proof verified
     alice.send_refresh(&alice_private_send_message);
     alice.state_out("alice");
 
     // bob get alice_send_message by private channel
     // or listen all message from privacy contract (Maybe filter by sender)
-    let (bob_receive_message,bob_private_receive_message) = bob.receive(alice_send_message, path.unwrap());
+    let (bob_receive_message,bob_private_receive_message) = bob.receive(alice_send_message, path);
     //verify_receive(&mut bob_receive_message,&mut bob);
     if !privacy_contract.receive_verify(bob.get_address(), bob_receive_message.clone()) {
         panic!("bob receive_verify failed");
