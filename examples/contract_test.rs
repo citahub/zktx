@@ -152,9 +152,9 @@ fn round_test(){
         panic!("alice send_verify failed");
     }
     let path = path.unwrap();
-    println!("path {:?}", path);
     // use log confirm sender proof verified
     alice.send_refresh(&alice_private_send_message);
+    alice.sub_balance(alice_send_message.delt_ba);
     alice.state_out("alice");
 
     // bob get alice_send_message by private channel
@@ -165,6 +165,7 @@ fn round_test(){
         panic!("bob receive_verify failed");
     }
     bob.receive_refresh(&bob_private_receive_message);
+    bob.add_balance(bob_receive_message.delt_ba);
     bob.state_out("bob");
 
 

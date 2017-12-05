@@ -79,7 +79,7 @@ impl<T: Hashable> PathFiller<T> {
 #[derive(Clone)]
 pub struct IncrementalMerkleTree<T: Hashable> {
     emptyroots: EmptyMerkleRoots<T>,
-    left: Option<T>,
+    pub left: Option<T>,
     right: Option<T>,
     parents: Vec<Option<T>>,
     depth: usize,
@@ -266,8 +266,6 @@ impl<T: Hashable> IncrementalMerkleTree<T> {
             d = d + 1;
         }
 
-        path.reverse();
-        index.reverse();
         MerklePath::new(path, index)
     }
 
@@ -354,4 +352,9 @@ impl<T: Hashable> IncrementalWitness<T> {
             }
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+
 }
