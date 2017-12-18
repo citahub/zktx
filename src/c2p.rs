@@ -7,6 +7,7 @@ use rand::thread_rng;
 use jubjub::*;
 
 use base::*;
+use convert::*;
 
 use std::fs::File;
 use std::path::Path;
@@ -232,21 +233,14 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
 pub fn c2p_info(
     rcm: [u64; 2],
     va: [u64; 2],
-    addr_sk: Vec<bool>,
-    path: Vec<[u64; 4]>,
+    addr_sk: String,
+    path: Vec<String>,
     loc: Vec<bool>,
-) -> Result<
-    ((([u64; 6], [u64; 6], bool),
-      (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-      ([u64; 6], [u64; 6], bool)),
-     [u64; 4],
-     [u64; 4],
-     ([u64; 4], [u64; 4])),
-    Error,
-> {
+) -> Result<(String,String,String,String),Error> {
     let rng = &mut thread_rng();
     let j = JubJub::new();
-    //TODO:Balance+value<2^vbit
+    let path = path.iter().map(|p|str2u644(p.clone())).collect();
+    let addr_sk = str2sk(addr_sk);
     let mut res: Vec<FrRepr> = vec![];
     let proof = create_random_proof::<Bls12, _, _, _>(
         C2Pcircuit::new(
@@ -261,22 +255,23 @@ pub fn c2p_info(
         ),
         c2p_param()?,
         rng,
-    )?
-        .serial();
+    )?.serial();
     let nullifier = res[0].serial();
     let root = res[1].serial();
     let delt_ba = (res[2].serial(), res[3].serial());
-    Ok((proof, nullifier, root, delt_ba))
+    Ok((proof2str(proof), u6442str(nullifier), u6442str(root), point2str(delt_ba)))
 }
 
 pub fn c2p_verify(
-    nullifier: [u64; 4],
-    root: [u64; 4],
-    delt_ba: ([u64; 4], [u64; 4]),
-    proof: (([u64; 6], [u64; 6], bool),
-            (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-            ([u64; 6], [u64; 6], bool)),
+    nullifier: String,
+    root: String,
+    delt_ba: String,
+    proof: String,
 ) -> Result<bool, Error> {
+    let nullifier = str2u644(nullifier);
+    let root = str2u644(root);
+    let delt_ba = str2point(delt_ba);
+    let proof = str2proof(proof);
     verify_proof(&c2p_vk()?, &Proof::from_serial(proof), |cs| {
         let nullifier = Fr::from_repr(FrRepr::from_serial(nullifier)).unwrap();
         let delt_x = Fr::from_repr(FrRepr::from_serial(delt_ba.0)).unwrap();

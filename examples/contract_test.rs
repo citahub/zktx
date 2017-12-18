@@ -8,13 +8,14 @@ use zktx::p2c::*;
 use zktx::contract::*;
 use zktx::incrementalmerkletree::*;
 use zktx::pedersen::PedersenDigest;
+use zktx::u6442str;
 
 struct Account{
-    pub balance: ([u64;4],[u64;4]),//in homomorphic encrpytion, = vP1+rP2
-    pub address: ([u64;4],[u64;4]),//address
+    pub balance: String,//in homomorphic encrpytion, = vP1+rP2
+    pub address: String,//address
     v: [u64;2],//private information: balance
     r: [u64;4],//private information: random number
-    sk: Vec<bool>//private information: secret_key
+    sk: String,//private information: secret_key
 }
 
 struct PrivateSendMessage{
@@ -31,8 +32,8 @@ struct PrivateReceiveMessage{
 impl Account{
     pub fn new(v:[u64;2],r:[u64;2])->Self{
         let rng = &mut thread_rng();
-        let sk = (0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>();
-        let address = address(&sk);
+        let sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
+        let address = address(sk.clone());
         let balance = v_p1_add_r_p2(v,r);
         Account{
             balance,
@@ -43,36 +44,34 @@ impl Account{
         }
     }
 
-    pub fn get_address(&self)->([u64;4],[u64;4]){
-        self.address
+    pub fn get_address(&self)->String{
+        self.address.clone()
     }
 
-    pub fn get_balance(&self)->([u64;4],[u64;4]){
-        self.balance
+    pub fn get_balance(&self)->String{
+        self.balance.clone()
     }
 
-    fn add_balance(&mut self,value:([u64;4],[u64;4])){
-        self.balance = ecc_add(self.balance,value);
+    fn add_balance(&mut self,value:String){
+        self.balance = ecc_add(self.balance.clone(),value);
     }
 
-    fn sub_balance(&mut self,value:([u64;4],[u64;4])){
-        self.balance = ecc_sub(self.balance,value);
+    fn sub_balance(&mut self,value:String){
+        self.balance = ecc_sub(self.balance.clone(),value);
     }
 
-    pub fn send(&self,v:[u64;2],rcm:[u64;2],address:([u64;4],[u64;4]), block_number: u64)->(SenderProof,PrivateSendMessage){
+    pub fn send(&self,v:[u64;2],rcm:[u64;2],address:String, block_number: u64)->(SenderProof,PrivateSendMessage){
         let rng = &mut thread_rng();
         let enc_random = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
-        let (proof,hb,coin,delt_ba,rp,enc) = p2c_info(self.r,rcm,self.v,v,address,enc_random).unwrap();
+        let (proof,hb,coin,delt_ba,enc) = p2c_info(self.r,rcm,self.v,v,address.clone(),self.sk.clone(),enc_random).unwrap();
         assert_eq!(hb,self.get_balance());
-        let (enc1,rp1) = encrypt([rcm[0],rcm[1],v[0],v[1]],enc_random,address);
-        assert_eq!(rp,rp1);
+        let enc1 = encrypt([rcm[0],rcm[1],v[0],v[1]],enc_random,address.clone());
         assert_eq!(enc,enc1);
         (
             SenderProof{
                 proof,
                 coin,
                 delt_ba,
-                rp,
                 enc,
                 block_number
             },
@@ -92,8 +91,8 @@ impl Account{
     }
 
     pub fn receive(&self,message:SenderProof, path: MerklePath<PedersenDigest>)->(ReceiverProof,PrivateReceiveMessage){
-        let (va,rcm) = decrypt(message.enc,message.rp,self.sk.clone());
-        let (proof,nullifier,root,delt_ba) = c2p_info(rcm, va, self.sk.clone(), path.authentication_path.iter().map(|p| p.0).collect(), path.index).unwrap();
+        let (va,rcm) = decrypt(message.enc,self.sk.clone());
+        let (proof,nullifier,root,delt_ba) = c2p_info(rcm, va, self.sk.clone(), path.authentication_path.iter().map(|p| u6442str(p.0)).collect(), path.index).unwrap();
         (
             ReceiverProof{
                 proof,
@@ -115,6 +114,10 @@ impl Account{
         let sv = self.v;
         let temp = u644add([sv[0],sv[1],0,0],[pv[0],pv[1],0,0]);
         self.v = [temp[0],temp[1]];
+    }
+
+    pub fn check_coin(&self,coin:String,enc:String)->bool{
+        check(coin,enc,self.sk.clone())
     }
 
     pub fn state_out(&self,name:&str){
@@ -154,20 +157,25 @@ fn round_test(){
     let path = path.unwrap();
     // use log confirm sender proof verified
     alice.send_refresh(&alice_private_send_message);
-    alice.sub_balance(alice_send_message.delt_ba);
+    alice.sub_balance(alice_send_message.delt_ba.clone());
     alice.state_out("alice");
 
     // bob get alice_send_message by private channel
     // or listen all message from privacy contract (Maybe filter by sender)
-    let (bob_receive_message,bob_private_receive_message) = bob.receive(alice_send_message, path);
-    //verify_receive(&mut bob_receive_message,&mut bob);
-    if !privacy_contract.receive_verify(bob.get_address(), bob_receive_message.clone()) {
-        panic!("bob receive_verify failed");
+    // check is the coin is to bob?
+    if bob.check_coin(alice_send_message.coin.clone(),alice_send_message.enc.clone()) {
+        println!("There is a coin to me");
+        let (bob_receive_message,bob_private_receive_message) = bob.receive(alice_send_message, path);
+        //verify_receive(&mut bob_receive_message,&mut bob);
+        if !privacy_contract.receive_verify(bob.get_address(), bob_receive_message.clone()) {
+            panic!("bob receive_verify failed");
+        }
+        bob.receive_refresh(&bob_private_receive_message);
+        bob.add_balance(bob_receive_message.delt_ba);
+        bob.state_out("bob");
+    } else {
+        println!("This coin is not mine");
     }
-    bob.receive_refresh(&bob_private_receive_message);
-    bob.add_balance(bob_receive_message.delt_ba);
-    bob.state_out("bob");
-
 
     current_block_number = current_block_number + 1;
     let (bob_send_message,bob_private_send_message) = bob.send([200,0],[rng.gen(),rng.gen()],alice.get_address(), current_block_number);
@@ -179,13 +187,18 @@ fn round_test(){
     bob.send_refresh(&bob_private_send_message);
     bob.state_out("bob");
 
-    let (alice_receive_message,alice_private_receive_message) = alice.receive(bob_send_message, path.unwrap());
-    //verify_receive(&mut alice_receive_message,&mut alice);
-    if !privacy_contract.receive_verify(alice.get_address(), alice_receive_message.clone()) {
-        panic!("alice receive_verify failed");
+    if alice.check_coin(bob_send_message.coin.clone(),bob_send_message.enc.clone()) {
+        println!("There is a coin to me");
+        let (alice_receive_message,alice_private_receive_message) = alice.receive(bob_send_message, path.unwrap());
+        //verify_receive(&mut alice_receive_message,&mut alice);
+        if !privacy_contract.receive_verify(alice.get_address(), alice_receive_message.clone()) {
+            panic!("alice receive_verify failed");
+        }
+        alice.receive_refresh(&alice_private_receive_message);
+        alice.state_out("alice");
+    } else {
+        println!("This coin is not mine");
     }
-    alice.receive_refresh(&alice_private_receive_message);
-    alice.state_out("alice");
 }
 
 fn main(){

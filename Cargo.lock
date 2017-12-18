@@ -1,13 +1,3 @@
-[root]
-name = "zktx"
-version = "0.0.1"
-dependencies = [
- "bellman 0.0.4 (git+https://github.com/Senlody/bellman.git?branch=0.0.4_modified)",
- "jubjub 0.0.1 (git+https://github.com/Senlody/jubjub-prototype.git?branch=modified)",
- "pairing 0.11.0 (git+https://github.com/Senlody/pairing.git?branch=0.11-release)",
- "rand 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
 [[package]]
 name = "bellman"
 version = "0.0.4"
@@ -34,7 +24,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "byteorder"
-version = "1.1.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -73,9 +63,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "hex"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "jubjub"
 version = "0.0.1"
-source = "git+https://github.com/Senlody/jubjub-prototype.git?branch=modified#100279227fea3249c1e7928eebdb3e16f778ca5e"
+source = "git+https://github.com/Senlody/jubjub-prototype.git?branch=modified#49256a0548b40e2d4b36900af2a0185c915d93df"
 dependencies = [
  "bellman 0.0.4 (git+https://github.com/Senlody/bellman.git?branch=0.0.4_modified)",
  "pairing 0.11.0 (git+https://github.com/Senlody/pairing.git?branch=0.11-release)",
@@ -84,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.33"
+version = "0.2.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -92,7 +87,7 @@ name = "num_cpus"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -100,7 +95,7 @@ name = "pairing"
 version = "0.11.0"
 source = "git+https://github.com/Senlody/pairing.git?branch=0.11-release#aa65ce4cdd5abde9a4f534da11a102a97cb802eb"
 dependencies = [
- "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -110,21 +105,33 @@ version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "fuchsia-zircon 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "zktx"
+version = "0.0.1"
+dependencies = [
+ "bellman 0.0.4 (git+https://github.com/Senlody/bellman.git?branch=0.0.4_modified)",
+ "hex 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "jubjub 0.0.1 (git+https://github.com/Senlody/jubjub-prototype.git?branch=modified)",
+ "pairing 0.11.0 (git+https://github.com/Senlody/pairing.git?branch=0.11-release)",
+ "rand 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [metadata]
 "checksum bellman 0.0.4 (git+https://github.com/Senlody/bellman.git?branch=0.0.4_modified)" = "<none>"
 "checksum bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "02b4ff8b16e6076c3e14220b39fbc1fabb6737522281a388998046859400895f"
 "checksum bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aad18937a628ec6abcd26d1489012cc0e18c21798210f491af69ded9b881106d"
-"checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"
+"checksum byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "652805b7e73fada9d85e9a6682a4abd490cb52d96aeecc12e33a0de34dfd0d23"
 "checksum crossbeam 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8837ab96533202c5b610ed44bc7f4183e7957c1c8f56e8cc78bb098593c8ba0a"
 "checksum fuchsia-zircon 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f6c0581a4e363262e52b87f59ee2afe3415361c6ec35e665924eb08afe8ff159"
 "checksum fuchsia-zircon-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "43f3795b4bae048dc6123a6b972cadde2e676f9ded08aef6bb77f5f157684a82"
 "checksum futures 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)" = "118b49cac82e04121117cbd3121ede3147e885627d82c4546b87c702debb90c1"
 "checksum futures-cpupool 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "e86f49cc0d92fe1b97a5980ec32d56208272cbb00f15044ea9e2799dde766fdf"
+"checksum hex 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "459d3cf58137bb02ad4adeef5036377ff59f066dbb82517b7192e3a5462a2abc"
 "checksum jubjub 0.0.1 (git+https://github.com/Senlody/jubjub-prototype.git?branch=modified)" = "<none>"
-"checksum libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)" = "5ba3df4dcb460b9dfbd070d41c94c19209620c191b0340b929ce748a2bcd42d2"
+"checksum libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)" = "36fbc8a8929c632868295d0178dd8f63fc423fd7537ad0738372bd010b3ac9b0"
 "checksum num_cpus 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "514f0d73e64be53ff320680ca671b64fe3fb91da01e1ae2ddc99eb51d453b20d"
 "checksum pairing 0.11.0 (git+https://github.com/Senlody/pairing.git?branch=0.11-release)" = "<none>"
 "checksum rand 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)" = "6475140dfd8655aeb72e1fd4b7a1cc1c202be65d71669476e392fe62532b9edd"

@@ -7,6 +7,7 @@ use rand::thread_rng;
 use jubjub::*;
 
 use base::*;
+use convert::*;
 
 use std::fs::File;
 use std::path::Path;
@@ -153,17 +154,10 @@ impl<'a> Circuit<Bls12> for C2Bcircuit<'a> {
 
         let ba = Num::new(cs, self.ba)?;
         let va = Num::new(cs, self.va)?;
-        let bn = ba.add(cs, &va)?;
         let bit_ba = ba.unpack_sized(cs, VBIT)?;
         let bit_va = va.unpack_sized(cs, VBIT)?;
-        let bit_bn = bn.unpack_sized(cs, VBIT)?;
         assert_eq!(bit_ba.len(), VBIT);
         assert_eq!(bit_va.len(), VBIT);
-        assert_eq!(bit_bn.len(), VBIT);
-
-        if let Ok(x) = bn.getvalue().get() {
-            self.res.push(x.into_repr());
-        }
 
         //nullifier = PH(addr_sk|value|rcm)
         let mut rcm2 = rcm.clone();
@@ -241,21 +235,16 @@ pub fn c2b_info(
     rcm: [u64; 2],
     ba: [u64; 2],
     va: [u64; 2],
-    addr_sk: Vec<bool>,
-    path: Vec<[u64; 4]>,
+    addr_sk: String,
+    path: Vec<String>,
     loc: Vec<bool>,
-) -> Result<
-    ((([u64; 6], [u64; 6], bool),
-      (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-      ([u64; 6], [u64; 6], bool)),
-     [u64; 4],
-     [u64; 4],
-     [u64; 4]),
-    Error,
-> {
+) -> Result<(String,String,String), Error>
+{
     let rng = &mut thread_rng();
     let j = JubJub::new();
     let mut res: Vec<FrRepr> = vec![];
+    let path = path.iter().map(|p|str2u644(p.clone())).collect();
+    let addr_sk = str2sk(addr_sk);
     let proof = create_random_proof::<Bls12, _, _, _>(
         C2Bcircuit::new(
             &ph_generator(),
@@ -272,21 +261,21 @@ pub fn c2b_info(
         rng,
     )?
         .serial();
-    let bn = res[0].serial();
-    let nullifier = res[1].serial();
-    let root = res[2].serial();
-    Ok((proof, bn, nullifier, root))
+    let nullifier = res[0].serial();
+    let root = res[1].serial();
+    Ok((proof2str(proof), u6442str(nullifier), u6442str(root)))
 }
 
 pub fn c2b_verify(
     ba: [u64; 2],
     va: [u64; 2],
-    nullifier: [u64; 4],
-    root: [u64; 4],
-    proof: (([u64; 6], [u64; 6], bool),
-            (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-            ([u64; 6], [u64; 6], bool)),
+    nullifier: String,
+    root: String,
+    proof: String,
 ) -> Result<bool, Error> {
+    let nullifier = str2u644(nullifier);
+    let root = str2u644(root);
+    let proof = str2proof(proof);
     verify_proof(&c2b_vk()?, &Proof::from_serial(proof), |cs| {
         let va = Fr::from_repr(FrRepr([va[0], va[1], 0, 0])).unwrap();
         let nullifier = Fr::from_repr(FrRepr::from_serial(nullifier)).unwrap();

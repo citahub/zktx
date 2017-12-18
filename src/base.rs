@@ -18,6 +18,8 @@ pub const B2CPARAMPATH: &str = "PARAMS/b2cparams";
 pub const C2PPARAMPATH: &str = "PARAMS/c2pparams";
 pub const GENERATORPATH: &str = "PARAMS/generators";
 
+use super::convert::*;
+
 pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
     use std::fs::File;
     use std::io::prelude::*;
@@ -86,27 +88,8 @@ pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
     serial
 }
 
-#[inline(always)]
-fn u64to8(mut num: u64) -> [u8; 8] {
-    let mut out: [u8; 8] = [0; 8];
-    for i in 0..8 {
-        out[i] = (num & 0b11111111) as u8;
-        num >>= 8;
-    }
-    out
-}
-
-#[inline(always)]
-fn u8to64(nums: [u8; 8]) -> u64 {
-    let mut res: u64 = 0;
-    for i in 0..8 {
-        res <<= 8;
-        res |= nums[7 - i] as u64;
-    }
-    res
-}
-
-pub fn address(addr_sk: &Vec<bool>) -> ([u64; 4], [u64; 4]) {
+pub fn address(addr_sk: String) -> String {
+    let addr_sk = str2sk(addr_sk);
     assert_eq!(addr_sk.len(), ADSK);
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]); //TODO:choose the seed
     let j = JubJub::new();
@@ -127,7 +110,7 @@ pub fn address(addr_sk: &Vec<bool>) -> ([u64; 4], [u64; 4]) {
         }
     }
 
-    (x0.into_repr().serial(), y0.into_repr().serial())
+    point2str((x0.into_repr().serial(), y0.into_repr().serial()))
 }
 
 fn point_double(x: Fr, y: Fr, j: &JubJub) -> (Fr, Fr) {
@@ -169,7 +152,9 @@ fn point_add(x0: &Fr, y0: &Fr, xp: &Fr, yp: &Fr, j: &JubJub) -> (Fr, Fr) {
     (x.clone(), y.clone())
 }
 
-pub fn ecc_add(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([u64; 4], [u64; 4]) {
+pub fn ecc_add(point1: String, point2: String) -> String {
+    let point1 = str2point(point1);
+    let point2 = str2point(point2);
     let (xfr, yfr) = point_add(
         &Fr::from_repr(FrRepr::from_serial(point1.0)).unwrap(),
         &Fr::from_repr(FrRepr::from_serial(point1.1)).unwrap(),
@@ -179,10 +164,12 @@ pub fn ecc_add(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([
     );
     let x = xfr.into_repr().serial();
     let y = yfr.into_repr().serial();
-    (x, y)
+    point2str((x, y))
 }
 
-pub fn ecc_sub(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([u64; 4], [u64; 4]) {
+pub fn ecc_sub(point1: String, point2: String) -> String {
+    let point1 = str2point(point1);
+    let point2 = str2point(point2);
     let mut temp = Fr::from_repr(FrRepr::from_serial(point2.0)).unwrap();
     temp.negate();
     let (xfr, yfr) = point_add(
@@ -194,10 +181,10 @@ pub fn ecc_sub(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([
     );
     let x = xfr.into_repr().serial();
     let y = yfr.into_repr().serial();
-    (x, y)
+    point2str((x, y))
 }
 
-pub fn v_p1_add_r_p2(v: [u64; 2], r: [u64; 2]) -> ([u64; 4], [u64; 4]) {
+pub fn v_p1_add_r_p2(v: [u64;2], r: [u64;2]) -> String {
     let v = {
         let mut vec = Vec::with_capacity(128);
         let mut num = v[0];
@@ -261,7 +248,7 @@ pub fn v_p1_add_r_p2(v: [u64; 2], r: [u64; 2]) -> ([u64; 4], [u64; 4]) {
         }
     }
 
-    (x0.into_repr().serial(), y0.into_repr().serial())
+    point2str((x0.into_repr().serial(), y0.into_repr().serial()))
 }
 
 fn point_mul(point: ([u64; 4], [u64; 4]), num: Vec<bool>) -> (Fr, Fr) {
@@ -289,7 +276,8 @@ fn point_mul(point: ([u64; 4], [u64; 4]), num: Vec<bool>) -> (Fr, Fr) {
     (x0, y0)
 }
 
-pub fn encrypt(message:[u64;4],random:[u64;4],address:([u64;4],[u64;4]))->([u64;4],([u64;4],[u64;4])){
+pub fn encrypt(message:[u64;4],random:[u64;4],address:String)->String{
+    let address = str2point(address);
     let random = Fr::from_serial(random).into_repr().serial();
     let random = {
         let mut v = vec![];
@@ -324,12 +312,14 @@ pub fn encrypt(message:[u64;4],random:[u64;4],address:([u64;4],[u64;4]))->([u64;
         }
     }
 
-    (enc.into_repr().serial(),(x0.into_repr().serial(),y0.into_repr().serial()))
+    enc2str((x0.into_repr().serial(),y0.into_repr().serial(),enc.into_repr().serial()))
 }
 
-pub fn decrypt(secret: [u64; 4], rp: ([u64; 4], [u64; 4]), sk: Vec<bool>) -> ([u64; 2], [u64; 2]) {
-    let rqx = point_mul(rp, sk).0;
-    let mut message = Fr::from_repr(FrRepr::from_serial(secret)).unwrap();
+pub fn decrypt(secret: String, sk: String) -> ([u64; 2], [u64; 2]) {
+    let sk = str2sk(sk);
+    let secret = str2enc(secret);
+    let rqx = point_mul((secret.0,secret.1), sk).0;
+    let mut message = Fr::from_repr(FrRepr::from_serial(secret.2)).unwrap();
     message.sub_assign(&rqx);
     let message = message.into_repr().serial();
     let va = [message[2], message[3]];
@@ -349,4 +339,10 @@ pub fn u644sub(num1: [u64; 4], num2: [u64; 4]) -> [u64; 4] {
     let fr2 = Fr::from_repr(FrRepr::from_serial(num2)).unwrap();
     fr1.sub_assign(&fr2);
     fr1.into_repr().serial()
+}
+
+pub fn check(coin:String,enc:String,sk:String)->bool{
+    let (va,rcm) = decrypt(enc,sk.clone());
+    let coin2 = super::build_coin(address(sk),va,rcm);
+    coin2 == coin
 }
