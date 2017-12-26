@@ -135,7 +135,8 @@ impl Account{
             zktx::u6442str(v)
         }).collect();
         let locs:Vec<bool> = (0..TREEDEPTH).map(|_| rng.gen()).collect::<Vec<bool>>();
-        let (proof,nullifier,root,delt_ba) = c2p_info(rcm,va,self.sk.clone(),path,locs).unwrap();
+        let rcm_new = [rng.gen(),rng.gen()];
+        let (proof,nullifier,root,delt_ba) = c2p_info(rcm,rcm_new,va,self.sk.clone(),path,locs).unwrap();
         (
             ReceiveMessage{
                 proof,
@@ -146,7 +147,7 @@ impl Account{
             },
             PrivateReceiveMessage{
                 v:va,
-                r:rcm
+                r:rcm_new
             }
         )
     }

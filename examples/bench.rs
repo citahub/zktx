@@ -103,6 +103,7 @@ fn test_c2p(samples:u32){
         //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
         let rng = &mut thread_rng();
         let rcm :[u64;2]= [rng.gen(),rng.gen()];
+        let rcm_new:[u64;2]=[rng.gen(),rng.gen()];
         let addr_sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
         let va :[u64;2]= [10,0];
         let path:Vec<String> = (0..TREEDEPTH).map(|_| {
@@ -146,7 +147,7 @@ fn test_c2p(samples:u32){
         let path2 = path.clone();
         let loc2 = locs.clone();
         let now = Instant::now();
-        let (proof,nullifier,root,delt_ba) = c2p_info(rcm,va,addr_sk,path,locs).unwrap();
+        let (proof,nullifier,root,delt_ba) = c2p_info(rcm,rcm_new,va,addr_sk,path,locs).unwrap();
 //        println!("H_B   = {:?}",hb);
 //        println!("nullifier  = {:?}",nullifier);
 //        println!("H_B-n = {:?}",hbn);

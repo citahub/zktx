@@ -18,6 +18,8 @@ struct C2Pcircuit<'a> {
 
     //r_cm
     rcm: Assignment<Fr>,
+    //r_cm_new
+    rcm_new: Assignment<Fr>,
     //value
     va: Assignment<Fr>,
     //addr_sk
@@ -40,6 +42,7 @@ impl<'a> C2Pcircuit<'a> {
             generators,
             j,
             rcm: Assignment::unknown(),
+            rcm_new: Assignment::unknown(),
             va: Assignment::unknown(),
             addr_sk: (0..ADSK).map(|_| Assignment::unknown()).collect(),
             path: (0..TREEDEPTH)
@@ -54,6 +57,7 @@ impl<'a> C2Pcircuit<'a> {
         generators: &'a [(Vec<Fr>, Vec<Fr>)],
         j: &'a JubJub,
         rcm: Fr,
+        rcm_new: Fr,
         va: Fr,
         addr_sk: Vec<bool>,
         path: Vec<[u64; 4]>,
@@ -82,6 +86,7 @@ impl<'a> C2Pcircuit<'a> {
             generators,
             j,
             rcm: Assignment::known(rcm),
+            rcm_new: Assignment::known(rcm_new),
             va: Assignment::known(va),
             addr_sk: addr_sk.iter().map(|&b| Assignment::known(b)).collect(),
             path: path.iter()
@@ -140,6 +145,7 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
     fn synthesize<CS: ConstraintSystem<Bls12>>(self, cs: &mut CS) -> Result<Self::InputMap, Error> {
         let rcm_num = Num::new(cs, self.rcm)?;
         let mut rcm = rcm_num.unpack_sized(cs, RCMBIT)?;
+        let rcm_new = Num::new(cs, self.rcm_new)?.unpack_sized(cs, RCMBIT)?;
         let mut addr_sk = Vec::with_capacity(ADSK);
         for b in self.addr_sk.iter() {
             addr_sk.push(Bit::alloc(cs, *b)?);
@@ -173,7 +179,6 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
 
 
         //coin = PH(addr|value|rcm)
-        let rcm = rcm2.clone();
         let vin = {
             for b in bit_va.iter() {
                 rcm2.push(*b);
@@ -216,7 +221,7 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
         }
 
         //delta_ba
-        let delt_ba = Point::encrypt((&p1, &p2), &bit_va, &rcm, cs)?;
+        let delt_ba = Point::encrypt((&p1, &p2), &bit_va, &rcm_new, cs)?;
         if let (Ok(x), Ok(y)) = (delt_ba.0.getvalue().get(), delt_ba.1.getvalue().get()) {
             self.res.push(x.into_repr());
             self.res.push(y.into_repr());
@@ -232,6 +237,7 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
 
 pub fn c2p_info(
     rcm: [u64; 2],
+    rcm_new: [u64;2],
     va: [u64; 2],
     addr_sk: String,
     path: Vec<String>,
@@ -247,6 +253,7 @@ pub fn c2p_info(
             &ph_generator(),
             &j,
             Fr::from_repr(FrRepr([rcm[0], rcm[1], 0, 0])).unwrap(),
+            Fr::from_repr(FrRepr([rcm_new[0], rcm_new[1], 0, 0])).unwrap(),
             Fr::from_repr(FrRepr([va[0], va[1], 0, 0])).unwrap(),
             addr_sk,
             path,

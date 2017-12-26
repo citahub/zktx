@@ -51,14 +51,6 @@ struct PathFiller<T: Hashable> {
 }
 
 impl<T: Hashable> PathFiller<T> {
-    fn new(d: usize) -> Self {
-        let emptyroots = EmptyMerkleRoots::new(d);
-        PathFiller {
-            queue: VecDeque::new(),
-            emptyroots,
-        }
-    }
-
     fn new_with_deque(d: usize, deque: VecDeque<T>) -> Self {
         let emptyroots = EmptyMerkleRoots::new(d);
         PathFiller {

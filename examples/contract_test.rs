@@ -92,7 +92,9 @@ impl Account{
 
     pub fn receive(&self,message:SenderProof, path: MerklePath<PedersenDigest>)->(ReceiverProof,PrivateReceiveMessage){
         let (va,rcm) = decrypt(message.enc,self.sk.clone());
-        let (proof,nullifier,root,delt_ba) = c2p_info(rcm, va, self.sk.clone(), path.authentication_path.iter().map(|p| u6442str(p.0)).collect(), path.index).unwrap();
+        let rng = &mut thread_rng();
+        let rcm_new = [rng.gen(),rng.gen()];
+        let (proof,nullifier,root,delt_ba) = c2p_info(rcm, rcm_new, va, self.sk.clone(), path.authentication_path.iter().map(|p| u6442str(p.0)).collect(), path.index).unwrap();
         (
             ReceiverProof{
                 proof,
@@ -102,7 +104,7 @@ impl Account{
             },
             PrivateReceiveMessage{
                 v:va,
-                r:rcm
+                r:rcm_new
             }
         )
     }
