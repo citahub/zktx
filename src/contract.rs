@@ -54,8 +54,6 @@ impl PrivacyContract {
     }
 
     pub fn send_verify(&mut self, address: String, message: SenderProof) -> (bool, Option<MerklePath<PedersenDigest>>) {
-        let balance = self.balances.get_mut(&address).unwrap();
-        assert!(p2c_verify(balance.clone(),message.coin.clone(),message.delt_ba.clone(),message.enc,address.clone(),message.proof).unwrap());
         if self.coins.contains(&message.coin) {
             println!("Dup coin");
             return (false, None);
@@ -68,7 +66,12 @@ impl PrivacyContract {
                 return (false, None);
             }
         }
+
+        let balance = self.balances.get_mut(&address).unwrap();
+        assert!(p2c_verify(balance.clone(),message.coin.clone(),message.delt_ba.clone(),message.enc,address.clone(),message.proof).unwrap());
+
         self.last_spent.insert(address, message.block_number);
+        self.coins.insert(message.coin.clone());
         self.tree.append(PedersenDigest(str2u644(message.coin.clone())));
         *balance = ecc_sub(balance.clone(), message.delt_ba);
         println!("sender proof verify ok! root {:?} coin {:?}", self.tree.root(), message.coin);
@@ -80,14 +83,16 @@ impl PrivacyContract {
             println!("invalid root, message.root {:?}, tree.root {:?}", message.root, self.tree.root());
             return false;
         }
-        let balance = self.balances.get_mut(&address).unwrap();
-        assert!(c2p_verify(message.nullifier.clone(),message.root,message.delt_ba.clone(),message.proof).unwrap());
+
         if self.nullifier_set.contains(&message.nullifier) {
             println!("Dup nullifier");
             return false;
         }
 
+        assert!(c2p_verify(message.nullifier.clone(),message.root,message.delt_ba.clone(),message.proof).unwrap());
+
         self.nullifier_set.insert(message.nullifier);
+        let balance = self.balances.get_mut(&address).unwrap();
         *balance = ecc_add(balance.clone(), message.delt_ba);
         true
     }

@@ -21,7 +21,7 @@ pub mod incrementalmerkletree;
 
 pub mod pedersen;
 
-mod convert;
+pub mod convert;
 
 pub use convert::{u6442str,str2u644,str2point,str2value,sk2str};
 

@@ -78,6 +78,24 @@ pub struct IncrementalMerkleTree<T: Hashable> {
 }
 
 impl<T: Hashable> IncrementalMerkleTree<T> {
+    pub fn export_left(&self) -> Option<T> {
+        return self.left;
+    }
+
+    pub fn export_right(&self) -> Option<T> {
+        return self.right;
+    }
+
+    pub fn export_parents(&self) -> Vec<Option<T>> {
+        return self.parents.clone();
+    }
+
+    pub fn restore(&mut self, left: Option<T>, right: Option<T>, parents: Vec<Option<T>>) {
+        self.left = left;
+        self.right = right;
+        self.parents = parents;
+    }
+
     pub fn new(d: usize) -> Self {
         let emptyroots = EmptyMerkleRoots::new(d);
         IncrementalMerkleTree {
