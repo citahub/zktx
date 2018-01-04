@@ -10,7 +10,6 @@ use base::*;
 use convert::*;
 
 use std::fs::File;
-use std::path::Path;
 
 struct C2Bcircuit<'a> {
     generators: &'a [(Vec<Fr>, Vec<Fr>)],
@@ -290,35 +289,31 @@ pub fn c2b_verify(
     })
 }
 
-pub fn ensure_c2b_param() -> Result<(), Error> {
-    if !Path::new(PARAMPATH).exists() {
-        use std::fs::create_dir;
-        create_dir(Path::new(PARAMPATH)).unwrap();
-    }
-    if !Path::new(C2BPARAMPATH).exists() {
-        println!("Creating the parameters");
-        let rng = &mut thread_rng();
-        let params = generate_random_parameters::<Bls12, _, _>(
-            C2Bcircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
-            rng,
-        )?;
-        params
-            .write(&mut File::create(C2BPARAMPATH).unwrap())
-            .unwrap();
-        println!("Just wrote the parameters to disk!");
-    }
-    Ok(())
+pub(crate) fn gen_c2b_param() {
+    let c2b_param_path = c2b_param_path();
+    let c2b_param_path = c2b_param_path.to_str().unwrap();
+
+    let rng = &mut thread_rng();
+    let params = generate_random_parameters::<Bls12, _, _>(
+        C2Bcircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
+        rng,
+    ).unwrap();
+    params
+        .write(&mut File::create(c2b_param_path).unwrap())
+        .unwrap();
 }
 
 pub fn c2b_param() -> Result<ProverStream, Error> {
-    ensure_c2b_param()?;
-    let params = ProverStream::new(C2BPARAMPATH).unwrap();
+    let c2b_param_path = c2b_param_path();
+    let c2b_param_path = c2b_param_path.to_str().unwrap();
+    let params = ProverStream::new(c2b_param_path).unwrap();
     Ok(params)
 }
 
 pub fn c2b_vk() -> Result<(PreparedVerifyingKey<Bls12>), Error> {
-    ensure_c2b_param()?;
-    let mut params = ProverStream::new(C2BPARAMPATH)?;
+    let c2b_param_path = c2b_param_path();
+    let c2b_param_path = c2b_param_path.to_str().unwrap();
+    let mut params = ProverStream::new(c2b_param_path)?;
     let vk2 = params.get_vk(5)?;
     let vk = prepare_verifying_key(&vk2);
     Ok(vk)

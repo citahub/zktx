@@ -1,6 +1,11 @@
 use pairing::bls12_381::{Fr, FrRepr};
 use pairing::{Field, PrimeField};
 use rand::{XorShiftRng, SeedableRng};
+use std::sync::Mutex;
+use std::path::Path;
+use std::path::PathBuf;
+use std::fs::File;
+use std::io::prelude::*;
 
 use jubjub::*;
 
@@ -11,55 +16,81 @@ pub const PHOUT: usize = 256;
 pub const PHIN: usize = 512;
 pub const ADSK: usize = 256;
 pub const TREEDEPTH: usize = 60;
-pub const PARAMPATH: &str = "PARAMS";
-pub const C2BPARAMPATH: &str = "PARAMS/c2bparams";
-pub const P2CPARAMPATH: &str = "PARAMS/p2cparams";
-pub const B2CPARAMPATH: &str = "PARAMS/b2cparams";
-pub const C2PPARAMPATH: &str = "PARAMS/c2pparams";
-pub const GENERATORPATH: &str = "PARAMS/generators";
+
+lazy_static! {
+    pub static ref PARAMPATH: Mutex<String> = Mutex::new("PARAMS".to_string());
+}
+
+pub fn set_param_path(path : &str) {
+    *PARAMPATH.lock().unwrap() = path.to_string();
+}
+
+pub(crate) fn generator_path() -> PathBuf {
+    let param_path = PARAMPATH.lock().unwrap().to_owned();
+    Path::new(&param_path).join("generators")
+}
+
+pub(crate) fn c2b_param_path() -> PathBuf {
+    let param_path = PARAMPATH.lock().unwrap().to_owned();
+    Path::new(&param_path).join("c2bparams")
+}
+
+pub(crate) fn p2c_param_path() -> PathBuf {
+    let param_path = PARAMPATH.lock().unwrap().to_owned();
+    Path::new(&param_path).join("p2cparams")
+}
+
+pub(crate) fn b2c_param_path() -> PathBuf {
+    let param_path = PARAMPATH.lock().unwrap().to_owned();
+    Path::new(&param_path).join("b2cparams")
+}
+
+pub(crate) fn c2p_param_path() -> PathBuf {
+    let param_path = PARAMPATH.lock().unwrap().to_owned();
+    Path::new(&param_path).join("c2pparams")
+}
+
+pub(crate) fn range_param_path() -> PathBuf {
+    let param_path = PARAMPATH.lock().unwrap().to_owned();
+    Path::new(&param_path).join("rangeparams")
+}
 
 use super::convert::*;
 
-pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
-    use std::fs::File;
-    use std::io::prelude::*;
-    use std::path::Path;
+pub (crate) fn gen_ph_generator() {
+    let generator_path = generator_path();
+    let generator_path= generator_path.to_str().unwrap();
 
-    if !Path::new(PARAMPATH).exists() {
-        use std::fs::create_dir;
-        create_dir(Path::new(PARAMPATH)).unwrap();
-    }
+    const SEED: [u32; 4] = [0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654];
+    let mut generator_rng = XorShiftRng::from_seed(SEED);
+    let generators = generate_constant_table(&mut generator_rng, &JubJub::new());
+    drop(generator_rng);
 
-    if !Path::new(GENERATORPATH).exists() {
-        println!("Creating the pedersen hash generators");
-        const SEED: [u32; 4] = [0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654];
-        let mut generator_rng = XorShiftRng::from_seed(SEED);
-        let generators = generate_constant_table(&mut generator_rng, &JubJub::new());
-        drop(generator_rng);
+    let mut writer = File::create(generator_path).unwrap();
 
-        let mut writer = File::create(GENERATORPATH).unwrap();
-
-        for tup in generators.iter() {
-            match tup {
-                &(ref frxs, ref frys) => {
-                    for x in frxs.iter() {
-                        for unit in x.serial().iter() {
-                            writer.write_all(&u64to8(*unit)).unwrap();
-                        }
+    for tup in generators.iter() {
+        match tup {
+            &(ref frxs, ref frys) => {
+                for x in frxs.iter() {
+                    for unit in x.serial().iter() {
+                        writer.write_all(&u64to8(*unit)).unwrap();
                     }
-                    for y in frys.iter() {
-                        for unit in y.serial().iter() {
-                            writer.write_all(&u64to8(*unit)).unwrap();
-                        }
+                }
+                for y in frys.iter() {
+                    for unit in y.serial().iter() {
+                        writer.write_all(&u64to8(*unit)).unwrap();
                     }
                 }
             }
         }
-        println!("Just wrote the generators to disk!");
-        return generators;
     }
+}
 
-    let mut reader = File::open(GENERATORPATH).unwrap();
+pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
+    let generator_path = generator_path();
+    let generator_path = generator_path.to_str().unwrap();
+
+    let mut reader = File::open(generator_path).unwrap();
 
     let mut serial = vec![];
     for _ in 0..128 {

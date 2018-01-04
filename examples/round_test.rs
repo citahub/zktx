@@ -213,6 +213,7 @@ fn round_test(){
 }
 
 fn main(){
+    zktx::set_param_path("PARAMS");
     println!("Round Test:");
 
     round_test();

@@ -6,11 +6,11 @@ use rand::thread_rng;
 
 use jubjub::*;
 
-use common_verify::*;
 use convert::*;
 
 use std::fs::File;
-use std::path::Path;
+
+use base::range_param_path;
 
 struct RangeCircuit<'a> {
     //upper bound
@@ -198,35 +198,30 @@ pub fn range_verify(
     })
 }
 
-pub fn ensure_range_param() -> Result<(), Error> {
-    if !Path::new(PARAMPATH).exists() {
-        use std::fs::create_dir;
-        create_dir(Path::new(PARAMPATH)).unwrap();
-    }
-    if !Path::new(RANGEPARAMPATH).exists() {
-        println!("Creating the parameters");
-        let rng = &mut thread_rng();
-        let params = generate_random_parameters::<Bls12, _, _>(
-            RangeCircuit::blank(&mut vec![]),
-            rng,
-        )?;
-        params
-            .write(&mut File::create(RANGEPARAMPATH).unwrap())
-            .unwrap();
-        println!("Just wrote the parameters to disk!");
-    }
-    Ok(())
+pub(crate) fn gen_range_param() {
+    let range_param_path = range_param_path();
+    let range_param_path = range_param_path.to_str().unwrap();
+    let rng = &mut thread_rng();
+    let params = generate_random_parameters::<Bls12, _, _>(
+        RangeCircuit::blank(&mut vec![]),
+        rng,
+    ).unwrap();
+    params
+        .write(&mut File::create(range_param_path).unwrap())
+        .unwrap();
 }
 
 fn range_param() -> Result<ProverStream, Error> {
-    ensure_range_param()?;
-    let params = ProverStream::new(RANGEPARAMPATH).unwrap();
+    let range_param_path = range_param_path();
+    let range_param_path = range_param_path.to_str().unwrap();
+    let params = ProverStream::new(range_param_path).unwrap();
     Ok(params)
 }
 
 fn range_vk() -> Result<(PreparedVerifyingKey<Bls12>), Error> {
-    ensure_range_param()?;
-    let mut params = ProverStream::new(RANGEPARAMPATH)?;
+    let range_param_path = range_param_path();
+    let range_param_path = range_param_path.to_str().unwrap();
+    let mut params = ProverStream::new(range_param_path)?;
     let vk2 = params.get_vk(5)?;
     let vk = prepare_verifying_key(&vk2);
     Ok(vk)

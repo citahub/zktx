@@ -3,12 +3,17 @@ extern crate zktx;
 
 use rand::{Rng, thread_rng};
 use zktx::base::*;
+use zktx::b2c::b2c_info;
+use zktx::b2c::b2c_verify;
+use zktx::c2b::c2b_info;
+use zktx::c2b::c2b_verify;
+use zktx::p2c::p2c_info;
+use zktx::p2c::p2c_verify;
+use zktx::common_verify::range::range_info;
+use zktx::common_verify::range::range_verify;
 
 fn test_b2c(samples:u32) {
     println!("test_b2c");
-    use zktx::b2c::*;
-
-    ensure_b2c_param().unwrap();
 
     use std::time::{Duration, Instant};
     let mut total = Duration::new(0, 0);
@@ -45,9 +50,6 @@ fn test_b2c(samples:u32) {
 
 fn test_c2b(samples:u32){
     println!("test_c2b");
-    use zktx::c2b::*;
-
-    ensure_c2b_param().unwrap();
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
@@ -90,8 +92,6 @@ fn test_c2p(samples:u32){
     println!("test_c2p");
     use zktx::c2p::*;
     use zktx::{pedersen_hash,pedersen_hash_root};
-
-    ensure_c2p_param().unwrap();
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
@@ -147,7 +147,7 @@ fn test_c2p(samples:u32){
         let path2 = path.clone();
         let loc2 = locs.clone();
         let now = Instant::now();
-        let (proof,nullifier,root,delt_ba) = c2p_info(rcm,rcm_new,va,addr_sk,path,locs).unwrap();
+        let (proof,nullifier,_root,delt_ba) = c2p_info(rcm,rcm_new,va,addr_sk,path,locs).unwrap();
 //        println!("H_B   = {:?}",hb);
 //        println!("nullifier  = {:?}",nullifier);
 //        println!("H_B-n = {:?}",hbn);
@@ -156,19 +156,19 @@ fn test_c2p(samples:u32){
         total += now.elapsed();
 
         let root = {
-            let mut root = zktx::u6442str(coin);
+            let mut root = coin;
             for i in 0..TREEDEPTH{
                 if loc2[i]{
-                    root = pedersen_hash_root(path2[i].clone(),root);
+                    root = pedersen_hash_root(zktx::str2u644(path2[i].clone()), root);
                 }else{
-                    root = pedersen_hash_root(root,path2[i].clone());
+                    root = pedersen_hash_root(root, zktx::str2u644(path2[i].clone()));
                 }
             }
             root
         };
 
         let now = Instant::now();
-        let res = c2p_verify(nullifier,root,delt_ba,proof).unwrap();
+        let res = c2p_verify(nullifier,zktx::u6442str(root),delt_ba,proof).unwrap();
         total2 += now.elapsed();
         assert!(res);
     }
@@ -178,9 +178,6 @@ fn test_c2p(samples:u32){
 
 fn test_p2c(samples:u32){
     println!("test_p2c");
-    use zktx::p2c::*;
-
-    ensure_p2c_param().unwrap();
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
@@ -221,9 +218,6 @@ fn test_p2c(samples:u32){
 fn test_range(){
     const SAMPLES:usize = 12;
     println!("test_range");
-    use zktx::common_verify::range::*;
-
-    ensure_range_param().unwrap();
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
@@ -256,6 +250,7 @@ fn test_range(){
 }
 
 fn main(){
+    zktx::set_param_path("PARAMS");
     test_range();
     test_b2c(10);
     test_p2c(10);

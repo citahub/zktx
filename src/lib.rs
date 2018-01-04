@@ -2,6 +2,8 @@ extern crate pairing;
 extern crate bellman;
 extern crate rand;
 extern crate jubjub;
+#[macro_use]
+extern crate lazy_static;
 
 pub mod base;
 
@@ -84,4 +86,33 @@ pub fn pedersen_hash_root(c0: [u64; 4], c1: [u64; 4]) -> [u64; 4] {
         }
     }
     jubjub::pedersen_hash_real(v.as_slice(), &base::ph_generator()).unwrap().serial()
+}
+
+pub use base::set_param_path;
+use base::gen_ph_generator;
+use b2c::gen_b2c_param;
+use c2b::gen_c2b_param;
+use c2p::gen_c2p_param;
+use p2c::gen_p2c_param;
+use common_verify::range::gen_range_param;
+
+pub fn gen_params(path: &str) {
+    use std::path::Path;
+    use std::fs::{create_dir, remove_dir_all};
+
+    {
+        let path = Path::new(path);
+        if path.exists() {
+            remove_dir_all(path).unwrap();
+        }
+        create_dir(path).unwrap();
+    }
+
+    set_param_path(path);
+    gen_ph_generator();
+    gen_b2c_param();
+    gen_c2b_param();
+    gen_c2p_param();
+    gen_p2c_param();
+    gen_range_param();
 }

@@ -10,7 +10,6 @@ use base::*;
 use convert::*;
 
 use std::fs::File;
-use std::path::Path;
 
 struct P2Ccircuit<'a> {
     generators: &'a [(Vec<Fr>, Vec<Fr>)],
@@ -352,35 +351,31 @@ pub fn p2c_verify(
     })
 }
 
-pub fn ensure_p2c_param() -> Result<(), Error> {
-    if !Path::new(PARAMPATH).exists() {
-        use std::fs::create_dir;
-        create_dir(Path::new(PARAMPATH)).unwrap();
-    }
-    if !Path::new(P2CPARAMPATH).exists() {
-        println!("Creating the parameters");
-        let rng = &mut thread_rng();
-        let params = generate_random_parameters::<Bls12, _, _>(
-            P2Ccircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
-            rng,
-        )?;
-        params
-            .write(&mut File::create(P2CPARAMPATH).unwrap())
-            .unwrap();
-        println!("Just wrote the parameters to disk!");
-    }
-    Ok(())
+pub(crate) fn gen_p2c_param() {
+    let p2c_param_path = p2c_param_path();
+    let p2c_param_path = p2c_param_path.to_str().unwrap();
+
+    let rng = &mut thread_rng();
+    let params = generate_random_parameters::<Bls12, _, _>(
+        P2Ccircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
+        rng,
+    ).unwrap();
+    params
+        .write(&mut File::create(p2c_param_path).unwrap())
+        .unwrap();
 }
 
 pub fn p2c_param() -> Result<ProverStream, Error> {
-    ensure_p2c_param()?;
-    let params = ProverStream::new(P2CPARAMPATH).unwrap();
+    let p2c_param_path = p2c_param_path();
+    let p2c_param_path = p2c_param_path.to_str().unwrap();
+    let params = ProverStream::new(p2c_param_path).unwrap();
     Ok(params)
 }
 
 pub fn p2c_vk() -> Result<(PreparedVerifyingKey<Bls12>), Error> {
-    ensure_p2c_param()?;
-    let mut params = ProverStream::new(P2CPARAMPATH)?;
+    let p2c_param_path = p2c_param_path();
+    let p2c_param_path = p2c_param_path.to_str().unwrap();
+    let mut params = ProverStream::new(p2c_param_path)?;
     let vk2 = params.get_vk(11)?;
     let vk = prepare_verifying_key(&vk2);
     Ok(vk)

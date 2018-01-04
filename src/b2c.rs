@@ -10,7 +10,6 @@ use base::*;
 use convert::*;
 
 use std::fs::File;
-use std::path::Path;
 
 struct B2Ccircuit<'a> {
     generators: &'a [(Vec<Fr>, Vec<Fr>)],
@@ -275,35 +274,31 @@ pub fn b2c_verify(
     })
 }
 
-pub fn ensure_b2c_param() -> Result<(), Error> {
-    if !Path::new(PARAMPATH).exists() {
-        use std::fs::create_dir;
-        create_dir(Path::new(PARAMPATH)).unwrap();
-    }
-    if !Path::new(B2CPARAMPATH).exists() {
-        println!("Creating the parameters");
-        let rng = &mut thread_rng();
-        let params = generate_random_parameters::<Bls12, _, _>(
-            B2Ccircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
-            rng,
-        )?;
-        params
-            .write(&mut File::create(B2CPARAMPATH).unwrap())
-            .unwrap();
-        println!("Just wrote the parameters to disk!");
-    }
-    Ok(())
+pub(crate) fn gen_b2c_param() {
+    let b2c_param_path = b2c_param_path();
+    let b2c_param_path = b2c_param_path.to_str().unwrap();
+
+    let rng = &mut thread_rng();
+    let params = generate_random_parameters::<Bls12, _, _>(
+        B2Ccircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
+        rng,
+    ).unwrap();
+    params
+        .write(&mut File::create(b2c_param_path).unwrap())
+        .unwrap();
 }
 
 fn b2c_param() -> Result<ProverStream, Error> {
-    ensure_b2c_param()?;
-    let params = ProverStream::new(B2CPARAMPATH).unwrap();
+    let b2c_param_path = b2c_param_path();
+    let b2c_param_path = b2c_param_path.to_str().unwrap();
+    let params = ProverStream::new(b2c_param_path).unwrap();
     Ok(params)
 }
 
 fn b2c_vk() -> Result<(PreparedVerifyingKey<Bls12>), Error> {
-    ensure_b2c_param()?;
-    let mut params = ProverStream::new(B2CPARAMPATH)?;
+    let b2c_param_path = b2c_param_path();
+    let b2c_param_path = b2c_param_path.to_str().unwrap();
+    let mut params = ProverStream::new(b2c_param_path)?;
     let vk2 = params.get_vk(8)?;
     let vk = prepare_verifying_key(&vk2);
     Ok(vk)
