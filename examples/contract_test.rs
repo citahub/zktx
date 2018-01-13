@@ -187,6 +187,7 @@ fn round_test(){
         panic!("bob send_verify failed");
     }
     bob.send_refresh(&bob_private_send_message);
+    bob.sub_balance(bob_send_message.delt_ba.clone());
     bob.state_out("bob");
 
     if alice.check_coin(bob_send_message.coin.clone(),bob_send_message.enc.clone()) {

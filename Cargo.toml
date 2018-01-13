@@ -6,6 +6,9 @@ version = "0.0.1"
 rand = "0.3"
 hex = "*"
 lazy_static = "1.0.0"
+tokio-core = "*"
+protobuf = { version = "^1.0.0"}
+rustc-hex = "1.0"
 
 [dependencies.pairing]
 git = "https://github.com/Senlody/pairing.git"
@@ -18,3 +21,7 @@ branch = "0.0.4_modified"
 [dependencies.jubjub]
 git = "https://github.com/Senlody/jubjub-prototype.git"
 branch = "modified"
+
+[dependencies.web3]
+git = "https://github.com/cryptape/rust-web3.git"
+branch = "master"
