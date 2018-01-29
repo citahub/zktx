@@ -11,15 +11,15 @@ protobuf = { version = "^1.0.0"}
 rustc-hex = "1.0"
 
 [dependencies.pairing]
-git = "https://github.com/Senlody/pairing.git"
+git = "https://github.com/cryptape/pairing.git"
 branch = "0.11-release"
 
 [dependencies.bellman]
-git = "https://github.com/Senlody/bellman.git"
+git = "https://github.com/cryptape/bellman.git"
 branch = "0.0.4_modified"
 
 [dependencies.jubjub]
-git = "https://github.com/Senlody/jubjub-prototype.git"
+git = "https://github.com/cryptape/jubjub-prototype.git"
 branch = "modified"
 
 [dependencies.web3]
