@@ -21,7 +21,3 @@ branch = "0.0.4_modified"
 [dependencies.jubjub]
 git = "https://github.com/cryptape/jubjub-prototype.git"
 branch = "modified"
-
-[dependencies.web3]
-git = "https://github.com/cryptape/rust-web3.git"
-branch = "master"
