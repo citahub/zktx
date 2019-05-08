@@ -1,0 +1,29 @@
+dist: xenial
+language: rust
+stages:
+  - Check
+  - Test
+jobs:
+  include:
+    - stage: Check
+      name: Format
+      script:
+        - rustup component add rustfmt
+        - cargo fmt --all -- --check
+    - stage: Check
+      name: Clippy
+      # env: RUSTFLAGS='-F warnings'
+      script:
+        # - rustup component add clippy
+        # - cargo clippy --all --all-targets
+        - |
+            if [ $(git status --short Cargo.lock | wc -l) -ne 0 ]; then
+                echo "[Error] Please update Cargo.lock BEFORE commit."
+                git diff Cargo.lock
+                exit 1
+            fi
+    - stage: Test
+      name: Unit Test
+      env: RUSTFLAGS='-F warnings'
+      script:
+        - cargo test --all --verbose

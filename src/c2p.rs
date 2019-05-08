@@ -1,7 +1,7 @@
 use bellman::groth16::*;
-use pairing::*;
-use pairing::bls12_381::{Fr, FrRepr, Bls12};
 use bellman::*;
+use pairing::bls12_381::{Bls12, Fr, FrRepr};
+use pairing::*;
 use rand::thread_rng;
 
 use jubjub::*;
@@ -67,7 +67,8 @@ impl<'a> C2Pcircuit<'a> {
         assert_eq!(res.len(), 0);
         assert_eq!(path.len(), TREEDEPTH);
         assert_eq!(loc.len(), TREEDEPTH);
-        let path: Vec<Vec<bool>> = path.into_iter()
+        let path: Vec<Vec<bool>> = path
+            .into_iter()
             .map(|u644| {
                 let mut v = Vec::with_capacity(PHOUT);
                 for u in u644.into_iter() {
@@ -88,7 +89,8 @@ impl<'a> C2Pcircuit<'a> {
             rcm_new: Assignment::known(rcm_new),
             va: Assignment::known(va),
             addr_sk: addr_sk.iter().map(|&b| Assignment::known(b)).collect(),
-            path: path.iter()
+            path: path
+                .iter()
                 .map(|ref ph| ph.iter().map(|&b| Assignment::known(b)).collect())
                 .collect(),
             loc: loc.iter().map(|&b| Assignment::known(b)).collect(),
@@ -176,7 +178,6 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
         let addr = Point::multiply(&p1, &addr_sk, cs)?;
         let addr = addr.0.unpack_sized(cs, PHOUT)?; //取x
 
-
         //coin = PH(addr|value|rcm)
         let vin = {
             for b in bit_va.iter() {
@@ -236,15 +237,15 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
 
 pub fn c2p_info(
     rcm: [u64; 2],
-    rcm_new: [u64;2],
+    rcm_new: [u64; 2],
     va: [u64; 2],
     addr_sk: String,
     path: Vec<String>,
     loc: Vec<bool>,
-) -> Result<(String,String,String,String),Error> {
+) -> Result<(String, String, String, String), Error> {
     let rng = &mut thread_rng();
     let j = JubJub::new();
-    let path = path.iter().map(|p|str2u644(p.clone())).collect();
+    let path = path.iter().map(|p| str2u644(p.clone())).collect();
     let addr_sk = str2sk(addr_sk);
     let mut res: Vec<FrRepr> = vec![];
     let proof = create_random_proof::<Bls12, _, _, _>(
@@ -261,11 +262,17 @@ pub fn c2p_info(
         ),
         c2p_param()?,
         rng,
-    )?.serial();
+    )?
+    .serial();
     let nullifier = res[0].serial();
     let root = res[1].serial();
     let delt_ba = (res[2].serial(), res[3].serial());
-    Ok((proof2str(proof), u6442str(nullifier), u6442str(root), point2str(delt_ba)))
+    Ok((
+        proof2str(proof),
+        u6442str(nullifier),
+        u6442str(root),
+        point2str(delt_ba),
+    ))
 }
 
 pub fn c2p_verify(
@@ -302,7 +309,8 @@ pub(crate) fn gen_c2p_param() {
     let params = generate_random_parameters::<Bls12, _, _>(
         C2Pcircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
         rng,
-    ).unwrap();
+    )
+    .unwrap();
     params
         .write(&mut File::create(c2p_param_path).unwrap())
         .unwrap();

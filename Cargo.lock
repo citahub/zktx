@@ -98,7 +98,7 @@ dependencies = [
 [[package]]
 name = "pairing"
 version = "0.11.0"
-source = "git+https://github.com/cryptape/pairing.git?branch=0.11-release#aa65ce4cdd5abde9a4f534da11a102a97cb802eb"
+source = "git+https://github.com/cryptape/pairing.git?branch=0.11-release#6e36ec6bd968072c7f499f5f286a8c89f1b51a3b"
 dependencies = [
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.20 (registry+https://github.com/rust-lang/crates.io-index)",

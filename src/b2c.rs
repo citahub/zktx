@@ -1,7 +1,7 @@
 use bellman::groth16::*;
-use pairing::*;
-use pairing::bls12_381::{Fr, FrRepr, Bls12};
 use bellman::*;
+use pairing::bls12_381::{Bls12, Fr, FrRepr};
+use pairing::*;
 use rand::thread_rng;
 
 use jubjub::*;
@@ -81,7 +81,7 @@ struct B2CcircuitInput {
     //enc
     enc: Num<Bls12>,
     //addr
-    addr: (Num<Bls12>, Num<Bls12>)
+    addr: (Num<Bls12>, Num<Bls12>),
 }
 
 impl<'a> Input<Bls12> for B2CcircuitInput {
@@ -171,11 +171,10 @@ impl<'a> Circuit<Bls12> for B2Ccircuit<'a> {
 
         //Enc
         let message = {
-            let b128 =
-                Num::new(
-                    cs,
-                    Assignment::known(Fr::from_repr(FrRepr::from_serial([0, 0, 1, 0])).unwrap()),
-                )?;
+            let b128 = Num::new(
+                cs,
+                Assignment::known(Fr::from_repr(FrRepr::from_serial([0, 0, 1, 0])).unwrap()),
+            )?;
             va.mul(cs, &b128)?.add(cs, &rcm_num)
         }?;
         let qtable = Point::point_mul_table((&addr_x_num, &addr_y_num), 256, cs)?;
@@ -198,7 +197,13 @@ impl<'a> Circuit<Bls12> for B2Ccircuit<'a> {
         let p1 = Point::enc_point_table(ADSK, 1, cs)?;
         let addr = Point::multiply(&p1, &addr_sk, cs)?;
 
-        Ok(B2CcircuitInput { va, coin, rp, enc ,addr })
+        Ok(B2CcircuitInput {
+            va,
+            coin,
+            rp,
+            enc,
+            addr,
+        })
     }
 }
 
@@ -208,10 +213,7 @@ pub fn b2c_info(
     addr: String,
     addr_sk: String,
     enc_random: [u64; 4],
-) -> Result<
-    (String,String,String),
-    Error>
-{
+) -> Result<(String, String, String), Error> {
     let addr = str2point(addr);
     let addr_sk = str2sk(addr_sk);
     let rng = &mut thread_rng();
@@ -233,9 +235,10 @@ pub fn b2c_info(
         ),
         b2c_param()?,
         rng,
-    )?.serial();
+    )?
+    .serial();
     let coin = res[0].serial();
-    let enc = (res[1].serial(), res[2].serial(),res[3].serial());
+    let enc = (res[1].serial(), res[2].serial(), res[3].serial());
     Ok((proof2str(proof), u6442str(coin), enc2str(enc)))
 }
 
@@ -243,7 +246,7 @@ pub fn b2c_verify(
     va: [u64; 2],
     coin: String,
     enc: String,
-    address:String,
+    address: String,
     proof: String,
 ) -> Result<bool, Error> {
     let coin = str2u644(coin);
@@ -266,10 +269,10 @@ pub fn b2c_verify(
                 Num::new(cs, Assignment::known(rpy))?,
             ),
             enc: Num::new(cs, Assignment::known(enc))?,
-            addr:(
+            addr: (
                 Num::new(cs, Assignment::known(addrx))?,
-                Num::new(cs, Assignment::known(addry))?
-            )
+                Num::new(cs, Assignment::known(addry))?,
+            ),
         })
     })
 }
@@ -282,7 +285,8 @@ pub(crate) fn gen_b2c_param() {
     let params = generate_random_parameters::<Bls12, _, _>(
         B2Ccircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
         rng,
-    ).unwrap();
+    )
+    .unwrap();
     params
         .write(&mut File::create(b2c_param_path).unwrap())
         .unwrap();

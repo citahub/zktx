@@ -1,11 +1,11 @@
 use pairing::bls12_381::{Fr, FrRepr};
 use pairing::{Field, PrimeField};
-use rand::{XorShiftRng, SeedableRng};
-use std::sync::Mutex;
-use std::path::Path;
-use std::path::PathBuf;
+use rand::{SeedableRng, XorShiftRng};
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::Path;
+use std::path::PathBuf;
+use std::sync::Mutex;
 
 use jubjub::*;
 
@@ -21,7 +21,7 @@ lazy_static! {
     pub static ref PARAMPATH: Mutex<String> = Mutex::new("PARAMS".to_string());
 }
 
-pub fn set_param_path(path : &str) {
+pub fn set_param_path(path: &str) {
     *PARAMPATH.lock().unwrap() = path.to_string();
 }
 
@@ -57,9 +57,9 @@ pub(crate) fn range_param_path() -> PathBuf {
 
 use super::convert::*;
 
-pub (crate) fn gen_ph_generator() {
+pub(crate) fn gen_ph_generator() {
     let generator_path = generator_path();
-    let generator_path= generator_path.to_str().unwrap();
+    let generator_path = generator_path.to_str().unwrap();
 
     const SEED: [u32; 4] = [0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654];
     let mut generator_rng = XorShiftRng::from_seed(SEED);
@@ -215,7 +215,7 @@ pub fn ecc_sub(point1: String, point2: String) -> String {
     point2str((x, y))
 }
 
-pub fn v_p1_add_r_p2(v: [u64;2], r: [u64;2]) -> String {
+pub fn v_p1_add_r_p2(v: [u64; 2], r: [u64; 2]) -> String {
     let v = {
         let mut vec = Vec::with_capacity(128);
         let mut num = v[0];
@@ -307,27 +307,27 @@ fn point_mul(point: ([u64; 4], [u64; 4]), num: Vec<bool>) -> (Fr, Fr) {
     (x0, y0)
 }
 
-pub fn encrypt(message:[u64;4],random:[u64;4],address:String)->String{
+pub fn encrypt(message: [u64; 4], random: [u64; 4], address: String) -> String {
     let address = str2point(address);
     let random = Fr::from_serial(random).into_repr().serial();
     let random = {
         let mut v = vec![];
-        for i in 0..4{
+        for i in 0..4 {
             let mut num = random[i];
-            for _ in 0..64{
-                v.push(num&1==1);
-                num>>=1;
+            for _ in 0..64 {
+                v.push(num & 1 == 1);
+                num >>= 1;
             }
         }
         v
     };
-    let rq = point_mul(address,random.clone());
+    let rq = point_mul(address, random.clone());
     let mut enc = Fr::from_repr(FrRepr::from_serial(message)).unwrap();
     enc.add_assign(&rq.0);
 
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]); //TODO:choose the seed
     let j = JubJub::new();
-    let (mut xp,mut yp) = Point::rand(&mut rng, &j).coordinate();
+    let (mut xp, mut yp) = Point::rand(&mut rng, &j).coordinate();
     let mut x0 = Fr::zero();
     let mut y0 = Fr::one();
     for i in 0..random.len() {
@@ -343,13 +343,17 @@ pub fn encrypt(message:[u64;4],random:[u64;4],address:String)->String{
         }
     }
 
-    enc2str((x0.into_repr().serial(),y0.into_repr().serial(),enc.into_repr().serial()))
+    enc2str((
+        x0.into_repr().serial(),
+        y0.into_repr().serial(),
+        enc.into_repr().serial(),
+    ))
 }
 
 pub fn decrypt(secret: String, sk: String) -> ([u64; 2], [u64; 2]) {
     let sk = str2sk(sk);
     let secret = str2enc(secret);
-    let rqx = point_mul((secret.0,secret.1), sk).0;
+    let rqx = point_mul((secret.0, secret.1), sk).0;
     let mut message = Fr::from_repr(FrRepr::from_serial(secret.2)).unwrap();
     message.sub_assign(&rqx);
     let message = message.into_repr().serial();
@@ -372,8 +376,8 @@ pub fn u644sub(num1: [u64; 4], num2: [u64; 4]) -> [u64; 4] {
     fr1.into_repr().serial()
 }
 
-pub fn check(coin:String,enc:String,sk:String)->bool{
-    let (va,rcm) = decrypt(enc,sk.clone());
-    let coin2 = super::build_coin(address(sk),va,rcm);
+pub fn check(coin: String, enc: String, sk: String) -> bool {
+    let (va, rcm) = decrypt(enc, sk.clone());
+    let coin2 = super::build_coin(address(sk), va, rcm);
     coin2 == coin
 }
