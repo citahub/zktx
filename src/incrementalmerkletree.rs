@@ -29,21 +29,18 @@ struct EmptyMerkleRoots<T: Hashable> {
 
 impl<T: Hashable> EmptyMerkleRoots<T> {
     fn new(d: usize) -> Self {
-        let mut empty_roots = vec![T::blank(); d+1];
+        let mut empty_roots = vec![T::blank(); d + 1];
         empty_roots[0] = T::blank();
         for i in 1..(d + 1) {
             empty_roots[i] = T::combine(&empty_roots[i - 1], &empty_roots[i - 1]);
         }
-        EmptyMerkleRoots {
-            empty_roots,
-        }
+        EmptyMerkleRoots { empty_roots }
     }
 
     fn empty_root(&self, d: usize) -> T {
         self.empty_roots.get(d).unwrap().clone()
     }
 }
-
 
 struct PathFiller<T: Hashable> {
     queue: VecDeque<T>,
@@ -344,7 +341,12 @@ impl<T: Hashable> IncrementalWitness<T> {
             self.cursor.as_mut().unwrap().append(obj);
 
             if self.cursor.as_ref().unwrap().is_complete(self.cursor_depth) {
-                self.filled.push(self.cursor.as_ref().unwrap().root_depth(self.cursor_depth, VecDeque::new()));
+                self.filled.push(
+                    self.cursor
+                        .as_ref()
+                        .unwrap()
+                        .root_depth(self.cursor_depth, VecDeque::new()),
+                );
                 self.cursor = None;
             }
         } else {
@@ -365,6 +367,4 @@ impl<T: Hashable> IncrementalWitness<T> {
 }
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}

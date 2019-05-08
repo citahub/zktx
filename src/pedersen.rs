@@ -1,6 +1,6 @@
-use incrementalmerkletree::Hashable;
 use super::pedersen_hash_root;
-use rand::{Rng,SeedableRng,StdRng};
+use incrementalmerkletree::Hashable;
+use rand::{Rng, SeedableRng, StdRng};
 
 impl Hashable for PedersenDigest {
     fn combine(left: &Self, right: &Self) -> PedersenDigest {

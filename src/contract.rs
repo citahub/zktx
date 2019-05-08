@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
-use incrementalmerkletree::*;
-use pedersen::PedersenDigest;
 use base::*;
 use c2p::*;
-use p2c::*;
-use std::collections::VecDeque;
 use convert::*;
+use incrementalmerkletree::*;
+use p2c::*;
+use pedersen::PedersenDigest;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 
 #[derive(Clone)]
 pub struct SenderProof {
@@ -19,11 +19,11 @@ pub struct SenderProof {
 }
 
 #[derive(Clone)]
-pub struct ReceiverProof{
+pub struct ReceiverProof {
     pub proof: String,
     pub nullifier: String,
     pub root: String,
-    pub delt_ba: String
+    pub delt_ba: String,
 }
 
 pub struct PrivacyContract {
@@ -53,7 +53,11 @@ impl PrivacyContract {
         self.balances.get(&address).unwrap().clone()
     }
 
-    pub fn send_verify(&mut self, address: String, message: SenderProof) -> (bool, Option<MerklePath<PedersenDigest>>) {
+    pub fn send_verify(
+        &mut self,
+        address: String,
+        message: SenderProof,
+    ) -> (bool, Option<MerklePath<PedersenDigest>>) {
         if self.coins.contains(&message.coin) {
             println!("Dup coin");
             return (false, None);
@@ -68,19 +72,36 @@ impl PrivacyContract {
         }
 
         let balance = self.balances.get_mut(&address).unwrap();
-        assert!(p2c_verify(balance.clone(),message.coin.clone(),message.delt_ba.clone(),message.enc,address.clone(),message.proof).unwrap());
+        assert!(p2c_verify(
+            balance.clone(),
+            message.coin.clone(),
+            message.delt_ba.clone(),
+            message.enc,
+            address.clone(),
+            message.proof
+        )
+        .unwrap());
 
         self.last_spent.insert(address, message.block_number);
         self.coins.insert(message.coin.clone());
-        self.tree.append(PedersenDigest(str2u644(message.coin.clone())));
+        self.tree
+            .append(PedersenDigest(str2u644(message.coin.clone())));
         *balance = ecc_sub(balance.clone(), message.delt_ba);
-        println!("sender proof verify ok! root {:?} coin {:?}", self.tree.root(), message.coin);
+        println!(
+            "sender proof verify ok! root {:?} coin {:?}",
+            self.tree.root(),
+            message.coin
+        );
         (true, Some(self.tree.path(VecDeque::new())))
     }
 
     pub fn receive_verify(&mut self, address: String, message: ReceiverProof) -> bool {
         if str2u644(message.root.clone()) != self.tree.root().0 {
-            println!("invalid root, message.root {:?}, tree.root {:?}", message.root, self.tree.root());
+            println!(
+                "invalid root, message.root {:?}, tree.root {:?}",
+                message.root,
+                self.tree.root()
+            );
             return false;
         }
 
@@ -89,7 +110,13 @@ impl PrivacyContract {
             return false;
         }
 
-        assert!(c2p_verify(message.nullifier.clone(),message.root,message.delt_ba.clone(),message.proof).unwrap());
+        assert!(c2p_verify(
+            message.nullifier.clone(),
+            message.root,
+            message.delt_ba.clone(),
+            message.proof
+        )
+        .unwrap());
 
         self.nullifier_set.insert(message.nullifier);
         let balance = self.balances.get_mut(&address).unwrap();

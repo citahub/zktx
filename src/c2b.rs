@@ -1,7 +1,7 @@
 use bellman::groth16::*;
-use pairing::*;
-use pairing::bls12_381::{Fr, FrRepr, Bls12};
 use bellman::*;
+use pairing::bls12_381::{Bls12, Fr, FrRepr};
+use pairing::*;
 use rand::thread_rng;
 
 use jubjub::*;
@@ -67,7 +67,8 @@ impl<'a> C2Bcircuit<'a> {
         assert_eq!(res.len(), 0);
         assert_eq!(path.len(), TREEDEPTH);
         assert_eq!(loc.len(), TREEDEPTH);
-        let path: Vec<Vec<bool>> = path.into_iter()
+        let path: Vec<Vec<bool>> = path
+            .into_iter()
             .map(|u644| {
                 let mut v = Vec::with_capacity(256);
                 for u in u644.into_iter() {
@@ -88,7 +89,8 @@ impl<'a> C2Bcircuit<'a> {
             ba: Assignment::known(ba),
             va: Assignment::known(va),
             addr_sk: addr_sk.iter().map(|&b| Assignment::known(b)).collect(),
-            path: path.iter()
+            path: path
+                .iter()
                 .map(|ref ph| ph.iter().map(|&b| Assignment::known(b)).collect())
                 .collect(),
             loc: loc.iter().map(|&b| Assignment::known(b)).collect(),
@@ -237,12 +239,11 @@ pub fn c2b_info(
     addr_sk: String,
     path: Vec<String>,
     loc: Vec<bool>,
-) -> Result<(String,String,String), Error>
-{
+) -> Result<(String, String, String), Error> {
     let rng = &mut thread_rng();
     let j = JubJub::new();
     let mut res: Vec<FrRepr> = vec![];
-    let path = path.iter().map(|p|str2u644(p.clone())).collect();
+    let path = path.iter().map(|p| str2u644(p.clone())).collect();
     let addr_sk = str2sk(addr_sk);
     let proof = create_random_proof::<Bls12, _, _, _>(
         C2Bcircuit::new(
@@ -259,7 +260,7 @@ pub fn c2b_info(
         c2b_param()?,
         rng,
     )?
-        .serial();
+    .serial();
     let nullifier = res[0].serial();
     let root = res[1].serial();
     Ok((proof2str(proof), u6442str(nullifier), u6442str(root)))
@@ -297,7 +298,8 @@ pub(crate) fn gen_c2b_param() {
     let params = generate_random_parameters::<Bls12, _, _>(
         C2Bcircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
         rng,
-    ).unwrap();
+    )
+    .unwrap();
     params
         .write(&mut File::create(c2b_param_path).unwrap())
         .unwrap();

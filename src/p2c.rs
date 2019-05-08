@@ -1,7 +1,7 @@
 use bellman::groth16::*;
-use pairing::*;
-use pairing::bls12_381::{Fr, FrRepr, Bls12};
 use bellman::*;
+use pairing::bls12_381::{Bls12, Fr, FrRepr};
+use pairing::*;
 use rand::thread_rng;
 
 use jubjub::*;
@@ -30,14 +30,14 @@ struct P2Ccircuit<'a> {
     //addr_sk
     addr_sk: Vec<Assignment<bool>>,
     //result
-    res: &'a mut Vec<FrRepr>
+    res: &'a mut Vec<FrRepr>,
 }
 
 impl<'a> P2Ccircuit<'a> {
     fn blank(
         generators: &'a [(Vec<Fr>, Vec<Fr>)],
         j: &'a JubJub,
-        res: &'a mut Vec<FrRepr>
+        res: &'a mut Vec<FrRepr>,
     ) -> P2Ccircuit<'a> {
         P2Ccircuit {
             generators,
@@ -62,7 +62,7 @@ impl<'a> P2Ccircuit<'a> {
         addr: (Fr, Fr),
         random: Fr,
         addr_sk: Vec<bool>,
-        res: &'a mut Vec<FrRepr>
+        res: &'a mut Vec<FrRepr>,
     ) -> P2Ccircuit<'a> {
         assert_eq!(res.len(), 0);
         P2Ccircuit {
@@ -92,7 +92,7 @@ struct P2CcircuitInput {
     //enc
     enc: Num<Bls12>,
     //addr
-    addr: (Num<Bls12>, Num<Bls12>)
+    addr: (Num<Bls12>, Num<Bls12>),
 }
 
 impl<'a> Input<Bls12> for P2CcircuitInput {
@@ -225,11 +225,10 @@ impl<'a> Circuit<Bls12> for P2Ccircuit<'a> {
 
         //Enc
         let message = {
-            let b128 =
-                Num::new(
-                    cs,
-                    Assignment::known(Fr::from_repr(FrRepr::from_serial([0, 0, 1, 0])).unwrap()),
-                )?;
+            let b128 = Num::new(
+                cs,
+                Assignment::known(Fr::from_repr(FrRepr::from_serial([0, 0, 1, 0])).unwrap()),
+            )?;
             va.mul(cs, &b128)?.add(cs, &rcm_num)
         }?;
         let qtable = Point::point_mul_table((&addr_x_num, &addr_y_num), 256, cs)?;
@@ -258,7 +257,7 @@ impl<'a> Circuit<Bls12> for P2Ccircuit<'a> {
             delt_ba,
             rp,
             enc,
-            addr
+            addr,
         })
     }
 }
@@ -271,7 +270,7 @@ pub fn p2c_info(
     addr: String,
     addr_sk: String,
     enc_random: [u64; 4],
-) -> Result<(String,String,String,String,String), Error> {
+) -> Result<(String, String, String, String, String), Error> {
     let addr = str2point(addr);
     let addr_sk = str2sk(addr_sk);
     let rng = &mut thread_rng();
@@ -292,16 +291,23 @@ pub fn p2c_info(
             ),
             Fr::from_serial(enc_random),
             addr_sk,
-            &mut res
+            &mut res,
         ),
         p2c_param()?,
         rng,
-    )?.serial();
+    )?
+    .serial();
     let hb = (res[0].serial(), res[1].serial());
     let coin = res[2].serial();
     let delt_ba = (res[3].serial(), res[4].serial());
-    let enc = (res[5].serial(), res[6].serial(),res[7].serial());
-    Ok((proof2str(proof), point2str(hb), u6442str(coin), point2str(delt_ba), enc2str(enc)))
+    let enc = (res[5].serial(), res[6].serial(), res[7].serial());
+    Ok((
+        proof2str(proof),
+        point2str(hb),
+        u6442str(coin),
+        point2str(delt_ba),
+        enc2str(enc),
+    ))
 }
 
 pub fn p2c_verify(
@@ -309,8 +315,9 @@ pub fn p2c_verify(
     coin: String,
     delt_ba: String,
     enc: String,
-    address:String,
-    proof: String) -> Result<bool, Error> {
+    address: String,
+    proof: String,
+) -> Result<bool, Error> {
     let hb = str2point(hb);
     let coin = str2u644(coin);
     let delt_ba = str2point(delt_ba);
@@ -343,10 +350,10 @@ pub fn p2c_verify(
                 Num::new(cs, Assignment::known(rpy))?,
             ),
             enc: Num::new(cs, Assignment::known(enc))?,
-            addr:(
+            addr: (
                 Num::new(cs, Assignment::known(addrx))?,
-                Num::new(cs, Assignment::known(addry))?
-            )
+                Num::new(cs, Assignment::known(addry))?,
+            ),
         })
     })
 }
@@ -359,7 +366,8 @@ pub(crate) fn gen_p2c_param() {
     let params = generate_random_parameters::<Bls12, _, _>(
         P2Ccircuit::blank(&ph_generator(), &JubJub::new(), &mut vec![]),
         rng,
-    ).unwrap();
+    )
+    .unwrap();
     params
         .write(&mut File::create(p2c_param_path).unwrap())
         .unwrap();
