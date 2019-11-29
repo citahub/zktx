@@ -3,14 +3,14 @@
 [[package]]
 name = "bellman"
 version = "0.0.4"
-source = "git+https://github.com/cryptape/bellman.git?branch=0.0.4_modified#5e6dc6a359c8b4c46c556cbc17848d76e6a4a418"
+source = "git+https://github.com/citahub/bellman.git?branch=0.0.4_modified#5e6dc6a359c8b4c46c556cbc17848d76e6a4a418"
 dependencies = [
  "bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-cpupool 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "num_cpus 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pairing 0.11.0 (git+https://github.com/cryptape/pairing.git?branch=0.11-release)",
+ "pairing 0.11.0 (git+https://github.com/citahub/pairing.git?branch=0.11-release)",
  "rand 0.3.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -70,10 +70,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "jubjub"
 version = "0.0.1"
-source = "git+https://github.com/cryptape/jubjub-prototype.git?branch=modified#198cb4080f45decc652aa393f2605cb5d9ddbd8b"
+source = "git+https://github.com/citahub/jubjub-prototype.git?branch=modified#198cb4080f45decc652aa393f2605cb5d9ddbd8b"
 dependencies = [
- "bellman 0.0.4 (git+https://github.com/cryptape/bellman.git?branch=0.0.4_modified)",
- "pairing 0.11.0 (git+https://github.com/cryptape/pairing.git?branch=0.11-release)",
+ "bellman 0.0.4 (git+https://github.com/citahub/bellman.git?branch=0.0.4_modified)",
+ "pairing 0.11.0 (git+https://github.com/citahub/pairing.git?branch=0.11-release)",
  "rand 0.3.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -98,7 +98,7 @@ dependencies = [
 [[package]]
 name = "pairing"
 version = "0.11.0"
-source = "git+https://github.com/cryptape/pairing.git?branch=0.11-release#6e36ec6bd968072c7f499f5f286a8c89f1b51a3b"
+source = "git+https://github.com/citahub/pairing.git?branch=0.11-release#6e36ec6bd968072c7f499f5f286a8c89f1b51a3b"
 dependencies = [
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.20 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -117,16 +117,16 @@ dependencies = [
 name = "zktx"
 version = "0.0.1"
 dependencies = [
- "bellman 0.0.4 (git+https://github.com/cryptape/bellman.git?branch=0.0.4_modified)",
+ "bellman 0.0.4 (git+https://github.com/citahub/bellman.git?branch=0.0.4_modified)",
  "hex 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "jubjub 0.0.1 (git+https://github.com/cryptape/jubjub-prototype.git?branch=modified)",
+ "jubjub 0.0.1 (git+https://github.com/citahub/jubjub-prototype.git?branch=modified)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pairing 0.11.0 (git+https://github.com/cryptape/pairing.git?branch=0.11-release)",
+ "pairing 0.11.0 (git+https://github.com/citahub/pairing.git?branch=0.11-release)",
  "rand 0.3.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [metadata]
-"checksum bellman 0.0.4 (git+https://github.com/cryptape/bellman.git?branch=0.0.4_modified)" = "<none>"
+"checksum bellman 0.0.4 (git+https://github.com/citahub/bellman.git?branch=0.0.4_modified)" = "<none>"
 "checksum bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "02b4ff8b16e6076c3e14220b39fbc1fabb6737522281a388998046859400895f"
 "checksum bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b3c30d3802dfb7281680d6285f2ccdaa8c2d8fee41f93805dba5c4cf50dc23cf"
 "checksum byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "652805b7e73fada9d85e9a6682a4abd490cb52d96aeecc12e33a0de34dfd0d23"
@@ -136,9 +136,9 @@ dependencies = [
 "checksum futures 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)" = "0bab5b5e94f5c31fc764ba5dd9ad16568aae5d4825538c01d6bca680c9bf94a7"
 "checksum futures-cpupool 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "ab90cde24b3319636588d0c35fe03b1333857621051837ed769faefb4c2162e4"
 "checksum hex 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "459d3cf58137bb02ad4adeef5036377ff59f066dbb82517b7192e3a5462a2abc"
-"checksum jubjub 0.0.1 (git+https://github.com/cryptape/jubjub-prototype.git?branch=modified)" = "<none>"
+"checksum jubjub 0.0.1 (git+https://github.com/citahub/jubjub-prototype.git?branch=modified)" = "<none>"
 "checksum lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c8f31047daa365f19be14b47c29df4f7c3b581832407daabe6ae77397619237d"
 "checksum libc 0.2.36 (registry+https://github.com/rust-lang/crates.io-index)" = "1e5d97d6708edaa407429faa671b942dc0f2727222fb6b6539bf1db936e4b121"
 "checksum num_cpus 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c51a3322e4bca9d212ad9a158a02abc6934d005490c054a2778df73a70aa0a30"
-"checksum pairing 0.11.0 (git+https://github.com/cryptape/pairing.git?branch=0.11-release)" = "<none>"
+"checksum pairing 0.11.0 (git+https://github.com/citahub/pairing.git?branch=0.11-release)" = "<none>"
 "checksum rand 0.3.20 (registry+https://github.com/rust-lang/crates.io-index)" = "512870020642bb8c221bf68baa1b2573da814f6ccfe5c9699b1c303047abe9b1"
