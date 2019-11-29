@@ -8,13 +8,13 @@ hex = "*"
 lazy_static = "1.0.0"
 
 [dependencies.pairing]
-git = "https://github.com/cryptape/pairing.git"
+git = "https://github.com/citahub/pairing.git"
 branch = "0.11-release"
 
 [dependencies.bellman]
-git = "https://github.com/cryptape/bellman.git"
+git = "https://github.com/citahub/bellman.git"
 branch = "0.0.4_modified"
 
 [dependencies.jubjub]
-git = "https://github.com/cryptape/jubjub-prototype.git"
+git = "https://github.com/citahub/jubjub-prototype.git"
 branch = "modified"
